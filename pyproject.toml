@@ -9,3 +9,80 @@ members = [
     "apps/api",
     "apps/mcp-server",
 ]
+
+[dependency-groups]
+dev = [
+    "mypy>=2.4.1",
+    "pytest>=8.0",
+    "pytest-asyncio>=1.0",
+    "pytest-mock>=3.14",
+    "ruff>=0.17.3",
+    "tox>=4.67.7",
+    "tox-uv>=1.37.3",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["apps"]
+pythonpath = ["apps/api/src", "apps/mcp-server/src"]
+
+[tool.tox]
+requires = ["tox>=4.22", "tox-uv>=1"]
+env_list = ["format", "type", "test"]
+
+[tool.tox.env_run_base]
+base_python = ["python3.15"]
+
+[tool.tox.env.format]
+description = "Check formatting and lint with ruff"
+skip_install = true
+dependency_groups = ["dev"]
+commands = [
+    ["ruff", "format", "--check", "."],
+    ["ruff", "check", "."],
+]
+
+[tool.tox.env.fix]
+description = "Apply ruff formatting and autofixes"
+skip_install = true
+dependency_groups = ["dev"]
+commands = [
+    ["ruff", "format", "."],
+    ["ruff", "check", "--fix", "."],
+]
+
+[tool.tox.env.type]
+description = "Type check with mypy"
+skip_install = true
+dependency_groups = ["dev"]
+deps = [
+    "./apps/api",
+    "./apps/mcp-server",
+]
+commands = [
+    ["mypy", { replace = "posargs", default = ["apps"], extend = true }],
+]
+
+[tool.tox.env.test]
+description = "Run pytest"
+skip_install = true
+dependency_groups = ["dev"]
+deps = [
+    "./apps/api",
+    "./apps/mcp-server",
+]
+commands = [
+    ["pytest", { replace = "posargs", default = [], extend = true }],
+]
+
+[tool.ruff.lint]
+
+
+[tool.ruff.lint.isort]
+known-first-party = ["api", "mcp_server"]
+
+[tool.mypy]
+python_version = "3.15"
+mypy_path = ["apps/api/src", "apps/mcp-server/src"]
+explicit_package_bases = true
