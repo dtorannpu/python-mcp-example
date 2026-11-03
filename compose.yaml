@@ -7,6 +7,21 @@ services:
       - "4318:4318" # OTLP HTTP
     restart: unless-stopped
 
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    command: ["start-dev", "--import-realm"]
+    ports:
+      - "8080:8080"
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      # トークンの iss を常に localhost 基準にする(ホストとコンテナ間で一致させるため)
+      KC_HOSTNAME: http://localhost:8080
+      KC_HTTP_ENABLED: "true"
+    volumes:
+      - ./keycloak/demo-realm.json:/opt/keycloak/data/import/demo-realm.json:ro
+    restart: unless-stopped
+
   api:
     build:
       context: .
@@ -17,8 +32,12 @@ services:
       FASTAPI_OTEL_AUTO_CONFIGURE: "true"
       OTEL_SERVICE_NAME: api
       OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
+      KEYCLOAK_ISSUER: http://localhost:8080/realms/demo
+      KEYCLOAK_JWKS_URL: http://keycloak:8080/realms/demo/protocol/openid-connect/certs
+      AUTH_AUDIENCE: api
     depends_on:
       - jaeger
+      - keycloak
     restart: unless-stopped
 
   mcp-server:
@@ -31,7 +50,16 @@ services:
       API_URL: http://api:8000
       OTEL_SERVICE_NAME: mcp-server
       OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
+      KEYCLOAK_ISSUER: http://localhost:8080/realms/demo
+      KEYCLOAK_JWKS_URL: http://keycloak:8080/realms/demo/protocol/openid-connect/certs
+      AUTH_AUDIENCE: mcp-server
+      KEYCLOAK_TOKEN_URL: http://keycloak:8080/realms/demo/protocol/openid-connect/token
+      KEYCLOAK_CLIENT_ID: mcp-server
+      KEYCLOAK_CLIENT_SECRET: mcp-server-secret
+      API_AUDIENCE: api
+      MCP_RESOURCE_URL: http://localhost:8001
     depends_on:
       - api
       - jaeger
+      - keycloak
     restart: unless-stopped
