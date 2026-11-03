@@ -24,6 +24,7 @@ provider = TracerProvider()
 provider.add_span_processor(BatchSpanProcessor(OTLPSpanExporter()))
 trace.set_tracer_provider(provider)
 HTTPX2ClientInstrumentor().instrument()
+tracer = trace.get_tracer(__name__)
 
 mcp = MCPServer(
     "Demo",
@@ -42,14 +43,18 @@ async def add(a: int, b: int) -> int:
     """Add two numbers (API サーバーの /add を呼び出す)。"""
     # 受け取ったトークンを API 向けのトークンに交換して呼び出す
     access_token = get_access_token()
-    headers = {}
-    if access_token:
-        api_token = await exchange_token(access_token.token)
-        headers["Authorization"] = f"Bearer {api_token}"
-    async with httpx2.AsyncClient(base_url=API_URL, headers=headers) as client:
-        response = await client.get("/add", params={"a": a, "b": b})
-        response.raise_for_status()
-        return response.json()["result"]
+    with tracer.start_as_current_span("tool.add") as span:
+        headers = {}
+        if access_token:
+            # トークンの sub (ユーザーID) をトレースに記録する
+            if access_token.subject:
+                span.set_attribute("enduser.id", access_token.subject)
+            api_token = await exchange_token(access_token.token)
+            headers["Authorization"] = f"Bearer {api_token}"
+        async with httpx2.AsyncClient(base_url=API_URL, headers=headers) as client:
+            response = await client.get("/add", params={"a": a, "b": b})
+            response.raise_for_status()
+            return response.json()["result"]
 
 
 if __name__ == "__main__":
