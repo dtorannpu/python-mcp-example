@@ -20,7 +20,7 @@ def api_client(mocker: MockerFixture) -> MagicMock:
     return client
 
 
-async def test_add_calls_api(api_client: MagicMock) -> None:
+async def test_add_calls_api(mocker: MockerFixture, api_client: MagicMock) -> None:
     assert await main.add(1, 2) == 3
     api_client.cls.assert_called_once_with(base_url=main.API_URL)
     api_client.get.assert_awaited_once_with("/add", params={"a": 1, "b": 2})
@@ -36,7 +36,9 @@ async def test_add_raises_on_api_error(
         await main.add(1, 2)
 
 
-async def test_add_tool_via_mcp(api_client: MagicMock) -> None:
+async def test_add_tool_via_mcp(
+    mocker: MockerFixture, api_client: MagicMock
+) -> None:
     api_client.get.return_value.json.return_value = {"result": 9}
     async with Client(main.mcp) as client:
         result = await client.call_tool("add", {"a": 4, "b": 5})

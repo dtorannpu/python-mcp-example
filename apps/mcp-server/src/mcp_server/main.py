@@ -2,8 +2,19 @@ import os
 
 import httpx2
 from mcp.server import MCPServer
+from opentelemetry import trace
+from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+from opentelemetry.instrumentation.httpx import HTTPX2ClientInstrumentor
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
 API_URL = os.environ.get("API_URL", "http://api:8000")
+
+# OTEL_EXPORTER_OTLP_ENDPOINT / OTEL_SERVICE_NAME は環境変数から読み込まれる
+provider = TracerProvider()
+provider.add_span_processor(BatchSpanProcessor(OTLPSpanExporter()))
+trace.set_tracer_provider(provider)
+HTTPX2ClientInstrumentor().instrument()
 
 mcp = MCPServer("Demo")
 
