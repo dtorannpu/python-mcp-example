@@ -7,6 +7,7 @@ dependencies = []
 [tool.uv.workspace]
 members = [
     "apps/api",
+    "apps/mcp-client",
     "apps/mcp-server",
 ]
 
@@ -25,7 +26,7 @@ dev = [
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 testpaths = ["apps"]
-pythonpath = ["apps/api/src", "apps/mcp-server/src"]
+pythonpath = ["apps/api/src", "apps/mcp-client/src", "apps/mcp-server/src"]
 
 [tool.tox]
 requires = ["tox>=4.22", "tox-uv>=1"]
@@ -58,6 +59,7 @@ skip_install = true
 dependency_groups = ["dev"]
 deps = [
     "./apps/api",
+    "./apps/mcp-client",
     "./apps/mcp-server",
 ]
 commands = [
@@ -70,6 +72,7 @@ skip_install = true
 dependency_groups = ["dev"]
 deps = [
     "./apps/api",
+    "./apps/mcp-client",
     "./apps/mcp-server",
 ]
 commands = [
@@ -80,9 +83,9 @@ commands = [
 
 
 [tool.ruff.lint.isort]
-known-first-party = ["api", "mcp_server"]
+known-first-party = ["api", "mcp_client", "mcp_server"]
 
 [tool.mypy]
 python_version = "3.15"
-mypy_path = ["apps/api/src", "apps/mcp-server/src"]
+mypy_path = ["apps/api/src", "apps/mcp-client/src", "apps/mcp-server/src"]
 explicit_package_bases = true
