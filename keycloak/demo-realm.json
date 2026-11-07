@@ -3,6 +3,41 @@
   "enabled": true,
   "sslRequired": "none",
   "registrationAllowed": false,
+  "components": {
+    "org.keycloak.services.clientregistration.policy.ClientRegistrationPolicy": [
+      {
+        "name": "Trusted Hosts",
+        "providerId": "trusted-hosts",
+        "subType": "anonymous",
+        "config": {
+          "host-sending-registration-request-must-match": ["false"],
+          "client-uris-must-match": ["true"],
+          "trusted-hosts": ["localhost", "127.0.0.1", "github.com"]
+        }
+      },
+      {
+        "name": "Allowed Client Scopes",
+        "providerId": "allowed-client-templates",
+        "subType": "anonymous",
+        "config": {
+          "allow-default-scopes": ["true"],
+          "allowed-client-scopes": []
+        }
+      },
+      {
+        "name": "Max Clients Limit",
+        "providerId": "max-clients",
+        "subType": "anonymous",
+        "config": { "max-clients": ["200"] }
+      },
+      {
+        "name": "Consent Required",
+        "providerId": "consent-required",
+        "subType": "anonymous",
+        "config": {}
+      }
+    ]
+  },
   "clients": [
     {
       "clientId": "mcp-client",

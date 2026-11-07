@@ -32,6 +32,15 @@ PKCE (Authorization Code + PKCE, S256) を行うのは MCP クライアント側
 MCP クライアントは `http://localhost:8001/.well-known/oauth-protected-resource` から issuer を辿って自動検出します。
 Inspector など手動設定のクライアントでは上記の認可 URL / トークン URL を入力してください。
 
+### Dynamic Client Registration (DCR, RFC 7591)
+
+Keycloak の DCR に対応しています。MCP クライアントは `http://localhost:8080/realms/demo/.well-known/openid-configuration` の `registration_endpoint` (`/realms/demo/clients-registrations/openid-connect`) で自動登録できます。
+
+- 匿名登録は `keycloak/demo-realm.json` の Client Registration Policy で許可 (Trusted Hosts: `localhost` / `127.0.0.1` の redirect URI のみ、最大 200 クライアント)
+- DCR で登録されたクライアントは Consent Required のため、ログイン時に同意画面が表示されます
+- `keycloak-init` サービス (`keycloak/init-dcr.sh`) が `mcp-server-audience` スコープ (`aud=mcp-server`) を realm のデフォルトスコープに追加するため、登録クライアントのトークンも `mcp-server` で検証を通ります
+- 既存の Keycloak コンテナで試す場合は、realm の再インポートが必要です (`docker compose down` 後に `up -d`)
+
 ### クライアント設定 (`keycloak/demo-realm.json`)
 
 | 項目 | 値 |
